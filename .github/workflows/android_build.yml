@@ -24,19 +24,23 @@ jobs:
           npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Configure Capacitor to Root
+      - name: Prepare Files and Sync
         run: |
-          # إنشاء ملف الإعدادات ليشير إلى المجلد الرئيسي "." حيث يوجد الـ index.html الخاص بك
+          # 1. إنشاء مجلد www ونقل ملف الـ index.html إليه
+          mkdir -p www
+          cp index.html www/
+          
+          # 2. إنشاء ملف الإعدادات ليشير لمجلد www الجديد
           cat <<EOF > capacitor.config.json
           {
             "appId": "com.unified.code.editor",
             "appName": "Unified Code Editor",
-            "webDir": ".",
+            "webDir": "www",
             "bundledWebRuntime": false
           }
           EOF
 
-          # مسح أي بناء قديم لضمان تحديث الكود
+          # 3. تنظيف أي بناء قديم وإضافة منصة أندرويد
           rm -rf android
           npx cap add android
           npx cap sync android
