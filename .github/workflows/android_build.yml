@@ -24,28 +24,19 @@ jobs:
           npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Final Fix and Sync
+      - name: Configure Capacitor to Root
         run: |
-          # 1. محاولة بناء ملفات الويب
-          npm run build --if-present
-          
-          # 2. ضمان وجود المجلد وملف index أساسي لإرضاء Capacitor
-          mkdir -p www
-          if [ ! -f "www/index.html" ]; then
-            echo "<html><body><h1>Unified Code Editor</h1></body></html>" > www/index.html
-          fi
-
-          # 3. إنشاء ملف الإعدادات
+          # إنشاء ملف الإعدادات ليشير إلى المجلد الرئيسي "." حيث يوجد الـ index.html الخاص بك
           cat <<EOF > capacitor.config.json
           {
             "appId": "com.unified.code.editor",
             "appName": "Unified Code Editor",
-            "webDir": "www",
+            "webDir": ".",
             "bundledWebRuntime": false
           }
           EOF
 
-          # 4. مسح أي محاولة فاشلة سابقة وإضافة المنصة من جديد
+          # مسح أي بناء قديم لضمان تحديث الكود
           rm -rf android
           npx cap add android
           npx cap sync android
