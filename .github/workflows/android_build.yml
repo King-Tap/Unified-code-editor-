@@ -24,19 +24,19 @@ jobs:
           npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Initialize Capacitor and Build
+      - name: Build Web and Sync Capacitor
         run: |
-          # بناء ملفات الويب أولاً (تأكد أن هذا الأمر موجود في package.json)
+          # بناء المشروع (إذا كان متاحاً)
           npm run build --if-present
           
-          # إنشاء مجلد www وهمي إذا فشل أمر البناء أعلاه لضمان عمل Capacitor
+          # التأكد من وجود مجلد الويب لضمان عمل Capacitor
           mkdir -p www
           
-          # تهيئة Capacitor إذا لم يكن مهيأً
-          npx cap init "Unified Code Editor" "com.unified.code.editor" --web-dir www --force
+          # إضافة منصة أندرويد فقط إذا لم تكن موجودة
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
           
-          # إضافة منصة أندرويد (هذا هو السطر الذي كان ينقصك)
-          npx cap add android || echo "Android already exists"
           npx cap sync android
 
       - name: Build Android Project
