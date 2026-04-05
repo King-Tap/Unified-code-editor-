@@ -11,7 +11,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # تم التحديث لأحدث نسخة مستقرة
+          node-version: 20 # نسخة مستقرة ومدعومة بالكامل
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -20,18 +20,20 @@ jobs:
           distribution: 'temurin'
 
       - name: Install Dependencies
-        run: |
-          npm install
-          npm install @capacitor/cli @capacitor/core @capacitor/android
+        run: npm install
 
-      - name: Initialize Capacitor
+      # خطوة مهمة جداً: بناء ملفات الويب (React/Vue/Ionic) قبل Capacitor
+      - name: Build Web Project
+        run: npm run build --if-present
+
+      - name: Setup Capacitor
         run: |
-          npx cap init "Unified Code Editor" "com.unified.code.editor" --web-dir .
-          npx cap add android
+          # التأكد من وجود مجلد الويب (عدله حسب مشروعك: www أو dist أو build)
+          mkdir -p dist 
+          npx cap sync android
 
       - name: Build Android Project
         run: |
-          npx cap copy
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
