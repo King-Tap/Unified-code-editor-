@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 محرر الأكواد الموحد | بايثون + HTML</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Fira+Code:wght@400;500&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --border: #30363d;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #a371f7;
+            --accent-orange: #f0883e;
+            --accent-red: #f85149;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* === الخلفية المتحركة === */
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; overflow: hidden; pointer-events: none;
+        }
+        .bg-animation span {
+            position: absolute; font-size: 20px; opacity: 0.04;
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0.04; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            position: relative; z-index: 1;
+            max-width: 1400px; margin: 0 auto; padding: 20px;
+        }
+        /* === الهيدر === */
+        .header { text-align: center; padding: 25px 0 15px; }
+        .header h1 {
+            font-size: 2.4em; font-weight: 900;
+            background: linear-gradient(135deg, #58a6ff, #3fb950, #a371f7, #f0883e);
+            background-size: 300% 300%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: gradientShift 5s ease infinite;
+            margin-bottom: 5px;
+        }
+        @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        .header p { color: var(--text-muted); font-size: 1em; }
+
+        /* === التبويبات === */
+        .tabs {
+            display: flex; gap: 4px; margin: 20px 0 15px;
+            background: var(--bg-panel); padding: 6px;
+            border-radius: 14px; width: fit-content; margin-inline: auto;
+            border: 2px solid var(--border);
+        }
+        .tab {
+            padding: 12px 28px; border: none; border-radius: 10px;
+            background: transparent; color: var(--text-muted);
+            font-family: 'Cairo', sans-serif; font-size: 1em; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .tab:hover { color: var(--text-main); }
+        .tab.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white; box-shadow: 0 4px 15px rgba(88,166,255,0.3);
+        }
+        .tab-badge {
+            background: rgba(255,255,255,0.2); padding: 2px 8px;
+            border-radius: 20px; font-size: 0.75em;
+        }
+
+        /* === شريط الأدوات === */
+        .toolbar {
+            display: flex; gap: 12px; margin: 15px 0;
+            flex-wrap: wrap; align-items: center; justify-content: space-between;
+        }
+        .toolbar-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 10px;
+            font-family: 'Cairo', sans-serif; font-size: 0.95em; font-weight: 700;
+            cursor: pointer; transition: all 0.25s ease;
+            display: flex; align-items: center; gap: 6px; color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        .btn-run { background: linear-gradient(135deg, #238636, #2ea043); }
+        .btn-run:hover { box-shadow: 0 6px 20px rgba(46, 160, 67, 0.4); }
+        .btn-run:disabled { background: #484f58; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-update { background: linear-gradient(135deg, #238636, #2ea043); }
+        .btn-clear { background: linear-gradient(135deg, #da3633, #f85149); }
+        .btn-copy { background: linear-gradient(135deg, #1f6feb, #58a6ff); }
+        .btn-example { background: linear-gradient(135deg, #8957e5, #a371f7); }
+        
+        .toggle-live {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg-panel); border: 1px solid var(--border);
+            padding: 8px 14px; border-radius: 10px; cursor: pointer;
+        }
+        .toggle-live input { accent-color: var(--accent-green); width: 18px; height: 18px; }
+
+        /* === مؤشر التحميل === */
+        .loading-bar {
+            width: 100%; height: 4px; background: #161b22;
+            border-radius: 2px; margin: 10px 0; overflow: hidden; display: none;
+        }
+        .loading-bar.active { display: block; }
+        .loading-bar .progress {
+            height: 100%; background: linear-gradient(90deg, #238636, #3fb950, #58a6ff, #a371f7);
+            background-size: 200% 100%; border-radius: 2px;
+            animation: loading 1.5s ease infinite;
+        }
+        @keyframes loading {
+            0% { width: 0%; background-position: 0% 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; background-position: 200% 0%; }
+        }
+
+        /* === حالة التحميل === */
+        .status {
+            text-align: center; padding: 10px; border-radius: 10px;
+            margin: 10px 0; font-size: 0.95em; display: none;
+        }
+        .status.info { display: block; background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); color: #58a6ff; }
+        .status.success { display: block; background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); color: #3fb950; }
+        .status.error { display: block; background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); color: #f85149; }
+
+        /* === مساحة العمل === */
+        .workspace { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+        @media (max-width: 992px) { .workspace { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--bg-panel); border-radius: 16px;            border: 2px solid var(--border); overflow: hidden;
+            display: flex; flex-direction: column; min-height: 500px;
+            transition: border-color 0.3s;
+        }
+        .panel:focus-within { border-color: var(--accent-blue); }
+        .preview-panel:focus-within { border-color: var(--accent-green); }
+
+        .panel-header {
+            background: #1c2129; padding: 10px 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        .panel-title { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.9em; }
+        .dots { display: flex; gap: 6px; }
+        .dot { width: 11px; height: 11px; border-radius: 50%; }
+        .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+
+        .editor-area { display: flex; flex: 1; position: relative; }
+        .line-numbers {
+            background: #0d1117; color: #484f58; padding: 15px 10px;
+            text-align: center; font-family: 'Fira Code', monospace;
+            font-size: 13px; line-height: 1.6; user-select: none;
+            min-width: 40px; border-left: 1px solid var(--border); direction: ltr;
+        }
+        #codeEditor {
+            flex: 1; background: #0d1117; color: #e6edf3; border: none; padding: 15px;
+            font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.6;
+            resize: none; outline: none; tab-size: 2; direction: ltr; text-align: left;
+        }
+        #codeEditor.python-mode { tab-size: 4; }
+
+        .preview-frame {
+            flex: 1; background: white; border: none;
+            width: 100%; height: 100%; min-height: 450px;
+        }
+
+        /* === مخرجات بايثون === */
+        .output-wrapper {
+            margin-top: 20px; border-radius: 16px; overflow: hidden;
+            border: 2px solid var(--border); background: var(--bg-panel);
+            transition: border-color 0.3s;
+        }
+        .output-wrapper.has-output { border-color: var(--accent-green); }
+        .output-wrapper.has-error { border-color: var(--accent-red); }
+        .output-header {
+            background: #1c2129; padding: 12px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        .output-header-title { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.95em; }        #output {
+            background: #0d1117; color: var(--text-main); padding: 20px;
+            font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.6;
+            min-height: 120px; max-height: 400px; overflow-y: auto;
+            direction: ltr; text-align: left; white-space: pre-wrap; word-break: break-word;
+        }
+        #output .error-text { color: var(--accent-red); }
+        #output .success-text { color: var(--accent-green); }
+        #output .info-text { color: var(--accent-blue); }
+
+        /* === إخفاء/إظهار الأقسام حسب الوضع === */
+        .mode-section { display: none; }
+        .mode-section.active { display: block; }
+        .mode-section.html-mode .python-only { display: none; }
+        .mode-section.python-mode .html-only { display: none; }
+
+        /* === أمثلة جاهزة === */
+        .examples-dropdown { position: relative; display: inline-block; }
+        .examples-menu {
+            display: none; position: absolute; top: 100%; right: 0;
+            background: #1c2129; border: 1px solid var(--border);
+            border-radius: 12px; min-width: 240px; z-index: 100;
+            margin-top: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden; animation: slideDown 0.2s ease;
+        }
+        .examples-menu.show { display: block; }
+        @keyframes slideDown { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+        .example-item {
+            padding: 10px 15px; cursor: pointer; transition: background 0.2s;
+            display: flex; align-items: center; gap: 8px; font-size: 0.9em; color: #c9d1d9;
+        }
+        .example-item:hover { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+        .example-item span.icon { font-size: 1.2em; }
+
+        /* === سكرول بار === */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+        .footer { text-align: center; padding: 25px 0; color: #484f58; font-size: 0.85em; }
+        .footer a { color: var(--accent-blue); text-decoration: none; }
+
+        /* === أنيميشن الظهور === */
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === التجاوب === */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.6em; }            .toolbar { flex-direction: column; }
+            .toolbar-group { width: 100%; justify-content: center; }
+            .btn { flex: 1; justify-content: center; padding: 10px 14px; font-size: 0.9em; }
+            .tab { padding: 10px 18px; font-size: 0.9em; }
+            #codeEditor { min-height: 200px; font-size: 12px; }
+            .container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation" id="bgAnimation"></div>
+    <div class="container">
+
+        <!-- الهيدر -->
+        <div class="header fade-in">
+            <h1>🚀 محرر الأكواد الموحد</h1>
+            <p>اكتب وشغّل أكواد <strong>بايثون 🐍</strong> أو <strong>HTML/CSS/JS 🌐</strong> في مكان واحد</p>
+        </div>
+
+        <!-- التبويبات -->
+        <div class="tabs fade-in">
+            <button class="tab active" onclick="switchMode('python')" id="tab-python">
+                🐍 بايثون <span class="tab-badge">Pyodide</span>
+            </button>
+            <button class="tab" onclick="switchMode('html')" id="tab-html">
+                🌐 HTML <span class="tab-badge">معاينة</span>
+            </button>
+        </div>
+
+        <!-- حالة التحميل (للبايثون فقط) -->
+        <div class="status info python-only" id="status">
+            ⏳ جاري تحميل مترجم بايثون... يرجى الانتظار
+        </div>
+        <div class="loading-bar active python-only" id="loadingBar">
+            <div class="progress"></div>
+        </div>
+
+        <!-- شريط الأدوات -->
+        <div class="toolbar fade-in">
+            <div class="toolbar-group">
+                <!-- أزرار بايثون -->
+                <button class="btn btn-run python-only" id="runBtn" onclick="runPython()" disabled>▶ تشغيل</button>
+                <!-- أزرار HTML -->
+                <button class="btn btn-update html-only" onclick="updatePreview()">▶ تحديث المعاينة</button>
+                <label class="toggle-live html-only">
+                    <input type="checkbox" id="liveToggle" checked> معاينة فورية
+                </label>
+                <!-- أزرار مشتركة -->
+                <button class="btn btn-clear" onclick="clearContent()">🗑️ مسح</button>
+                <button class="btn btn-copy" onclick="copyCode()">📋 نسخ</button>            </div>
+            <div class="examples-dropdown">
+                <button class="btn btn-example" onclick="toggleExamples()">📚 أمثلة جاهزة ▼</button>
+                <div class="examples-menu" id="examplesMenu">
+                    <div style="padding:8px 15px;font-size:0.8em;color:var(--text-muted);border-bottom:1px solid var(--border)">🐍 بايثون</div>
+                    <div class="example-item" onclick="loadExample('py-hello')"><span class="icon">👋</span> مرحباً بالعالم</div>
+                    <div class="example-item" onclick="loadExample('py-calc')"><span class="icon">🔢</span> آلة حاسبة</div>
+                    <div class="example-item" onclick="loadExample('py-fib')"><span class="icon">📐</span> فيبوناتشي</div>
+                    <div class="example-item" onclick="loadExample('py-oop')"><span class="icon">🏗️</span> برمجة كائنية</div>
+                    <div style="padding:8px 15px;font-size:0.8em;color:var(--text-muted);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">🌐 HTML</div>
+                    <div class="example-item" onclick="loadExample('html-card')"><span class="icon">🎴</span> بطاقة تعريفية</div>
+                    <div class="example-item" onclick="loadExample('html-buttons')"><span class="icon">🔘</span> أزرار متحركة</div>
+                    <div class="example-item" onclick="loadExample('html-form')"><span class="icon">📝</span> نموذج تسجيل</div>
+                    <div class="example-item" onclick="loadExample('html-game')"><span class="icon">🎮</span> لعبة بسيطة</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- وضع بايثون -->
+        <div class="mode-section python-mode active fade-in" id="section-python">
+            <!-- المحرر -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+                    <div class="panel-title">📝 main.py</div>
+                    <div style="width: 55px;"></div>
+                </div>
+                <div class="editor-area">
+                    <div class="line-numbers" id="lineNumbers">1</div>
+                    <textarea id="codeEditor" class="python-mode" spellcheck="false" placeholder="# اكتب كود بايثون هنا... 🐍"
+                        oninput="updateLineNumbers()" onkeydown="handleTab(event)"></textarea>
+                </div>
+            </div>
+            <!-- المخرجات -->
+            <div class="output-wrapper" id="outputWrapper">
+                <div class="output-header">
+                    <div class="output-header-title">🖥️ المخرجات</div>
+                    <span style="color: #484f58; font-size: 0.8em;" id="execTime"></span>
+                </div>
+                <div id="output"><span class="info-text">⏳ في انتظار تشغيل الكود...</span></div>
+            </div>
+        </div>
+
+        <!-- وضع HTML -->
+        <div class="mode-section html-mode fade-in" id="section-html">
+            <div class="workspace">
+                <!-- المحرر -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>                        <div class="panel-title">📝 index.html</div>
+                        <div style="width: 45px;"></div>
+                    </div>
+                    <div class="editor-area">
+                        <div class="line-numbers" id="lineNumbersHtml">1</div>
+                        <textarea id="codeEditorHtml" spellcheck="false" placeholder="اكتب كود HTML هنا..."
+                            oninput="handleHtmlInput()" onkeydown="handleHtmlTab(event)"></textarea>
+                    </div>
+                </div>
+                <!-- المعاينة -->
+                <div class="panel preview-panel">
+                    <div class="panel-header">
+                        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+                        <div class="panel-title">👁️ معاينة مباشرة</div>
+                        <div style="width: 45px;"></div>
+                    </div>
+                    <iframe id="preview" class="preview-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- الفوتر -->
+        <div class="footer">
+            صُنع بـ ❤️ | بايثون: <a href="https://pyodide.org" target="_blank">Pyodide</a> | HTML: يعمل محلياً في المتصفح
+        </div>
+    </div>
+
+    <!-- تحميل Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+
+    <script>
+        // === المتغيرات العامة ===
+        let pyodide = null, isPyLoaded = false, currentMode = 'python';
+        let debounceTimer, htmlEditor, pyEditor, preview, liveToggle;
+
+        // === التهيئة ===
+        window.addEventListener('DOMContentLoaded', () => {
+            htmlEditor = document.getElementById('codeEditorHtml');
+            pyEditor = document.getElementById('codeEditor');
+            preview = document.getElementById('preview');
+            liveToggle = document.getElementById('liveToggle');
+
+            // كود بايثون الافتراضي
+            pyEditor.value = `# 🐍 اكتب كود بايثون هنا
+print("مرحباً بالعالم! 🌍")
+
+# تجربة بسيطة
+x, y = 10, 5
+print(f"{x} + {y} = {x + y}")
+print(f"{x} × {y} = {x * y}")`;
+            // كود HTML الافتراضي
+            const defaultHtml = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><title>معاينة</title>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#f0f2f5;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
+    .card{background:white;padding:2rem;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.1);text-align:center;max-width:300px}
+    button{background:linear-gradient(135deg,#007aff,#00c6ff);color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold}
+    button:hover{transform:scale(1.05)}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>👋 مرحباً!</h2>
+    <p>هذه معاينة مباشرة لـ HTML/CSS/JS</p>
+    <button onclick="alert('🎉 يعمل!')">اضغط هنا</button>
+  </div>
+</body>
+</html>`;
+            htmlEditor.value = defaultHtml;
+
+            updateLineNumbers();
+            updateHtmlLineNumbers();
+            updatePreview();
+            loadPyodideEngine();
+            createBgAnimation();
+        });
+
+        // === التبديل بين الأوضاع ===
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.mode-section').forEach(s => s.classList.remove('active'));
+            
+            document.getElementById(`tab-${mode}`).classList.add('active');
+            document.getElementById(`section-${mode}`).classList.add('active');
+            
+            if (mode === 'python') {
+                updateLineNumbers();
+            } else {
+                updateHtmlLineNumbers();
+                if (liveToggle?.checked) updatePreview();
+            }
+        }
+
+        // === أرقام الأسطر ===
+        function updateLineNumbers() {
+            const lines = pyEditor.value.split('\n').length;            document.getElementById('lineNumbers').innerHTML = Array.from({length: lines}, (_,i)=>i+1).join('<br>');
+        }
+        function updateHtmlLineNumbers() {
+            const lines = htmlEditor.value.split('\n').length;
+            document.getElementById('lineNumbersHtml').innerHTML = Array.from({length: lines}, (_,i)=>i+1).join('<br>');
+        }
+
+        // === دعم Tab ===
+        function handleTab(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = pyEditor.selectionStart, end = pyEditor.selectionEnd;
+                pyEditor.value = pyEditor.value.substring(0, start) + '    ' + pyEditor.value.substring(end);
+                pyEditor.selectionStart = pyEditor.selectionEnd = start + 4;
+                updateLineNumbers();
+            }
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runPython(); }
+        }
+        function handleHtmlTab(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = htmlEditor.selectionStart, end = htmlEditor.selectionEnd;
+                htmlEditor.value = htmlEditor.value.substring(0, start) + '  ' + htmlEditor.value.substring(end);
+                htmlEditor.selectionStart = htmlEditor.selectionEnd = start + 2;
+                updateHtmlLineNumbers();
+            }
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); updatePreview(); }
+        }
+
+        // === بايثون: التحميل ===
+        async function loadPyodideEngine() {
+            const status = document.getElementById('status'), loadingBar = document.getElementById('loadingBar'), runBtn = document.getElementById('runBtn');
+            try {
+                pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+                isPyLoaded = true; runBtn.disabled = false;
+                status.className = 'status success python-only';
+                status.textContent = '✅ تم تحميل بايثون! يمكنك التشغيل الآن';
+                loadingBar.classList.remove('active');
+                setTimeout(() => status.style.display = 'none', 3000);
+            } catch (err) {
+                status.className = 'status error python-only';
+                status.textContent = '❌ فشل التحميل. تأكد من الإنترنت.';
+                console.error(err);
+            }
+        }
+
+        // === بايثون: التشغيل ===
+        async function runPython() {
+            if (!isPyLoaded || !pyodide) return;
+            const code = pyEditor.value, output = document.getElementById('output'), outputWrapper = document.getElementById('outputWrapper'), runBtn = document.getElementById('runBtn'), execTime = document.getElementById('execTime');            if (!code.trim()) { output.innerHTML = '<span class="info-text">⚠️ اكتب كوداً أولاً</span>'; return; }
+            runBtn.disabled = true; runBtn.innerHTML = '⏳ جاري التشغيل...'; output.textContent = ''; outputWrapper.classList.remove('has-output','has-error');
+            const start = performance.now();
+            try {
+                pyodide.setStdout({ batched: msg => output.textContent += msg + '\n' });
+                pyodide.setStderr({ batched: msg => output.textContent += msg + '\n' });
+                await pyodide.runPythonAsync(code);
+                const end = performance.now();
+                execTime.textContent = `⏱️ الوقت: ${((end-start)/1000).toFixed(3)} ثانية`;
+                if (!output.textContent.trim()) output.innerHTML = '<span class="success-text">✅ نفذ بنجاح (بدون مخرجات)</span>';
+                outputWrapper.classList.add('has-output');
+            } catch (err) {
+                output.innerHTML = `<span class="error-text">❌ خطأ:\n${err.message}</span>`;
+                outputWrapper.classList.add('has-error'); execTime.textContent = '';
+            }
+            runBtn.disabled = false; runBtn.innerHTML = '▶ تشغيل';
+        }
+
+        // === HTML: المعاينة ===
+        function updatePreview() {
+            const code = htmlEditor.value;
+            preview.srcdoc = code;
+            document.querySelector('.preview-panel').style.borderColor = '#3fb950';
+            setTimeout(() => document.querySelector('.preview-panel').style.borderColor = '', 500);
+        }
+        function handleHtmlInput() {
+            updateHtmlLineNumbers();
+            if (liveToggle?.checked) { clearTimeout(debounceTimer); debounceTimer = setTimeout(updatePreview, 600); }
+        }
+
+        // === وظائف مشتركة ===
+        function clearContent() {
+            if (currentMode === 'python') {
+                pyEditor.value = ''; updateLineNumbers();
+                document.getElementById('output').innerHTML = '<span class="info-text">⏳ في انتظار الكود...</span>';
+                document.getElementById('outputWrapper').classList.remove('has-output','has-error');
+                document.getElementById('execTime').textContent = '';
+            } else {
+                if (confirm('مسح كود HTML؟')) {
+                    htmlEditor.value = ''; updateHtmlLineNumbers(); preview.srcdoc = '';
+                }
+            }
+        }
+        function copyCode() {
+            const code = currentMode === 'python' ? pyEditor.value : htmlEditor.value;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.btn-copy'), orig = btn.innerHTML;
+                btn.innerHTML = '✅ تم النسخ!'; setTimeout(() => btn.innerHTML = orig, 1500);
+            });
+        }
+        // === أمثلة جاهزة ===
+        const examples = {
+            // بايثون
+            'py-hello': `# 👋 مرحباً
+print("="*40)
+print("  مرحباً بالعالم! 🌍")
+print("="*40)
+name, age = "أحمد", 25
+print(f"\\nاسمي: {name} | عمري: {age}")
+fruits = ["🍎تفاح","🍌موز","🍊برتقال"]
+print("\\n🍉 الفواكه:")
+for i,f in enumerate(fruits,1): print(f"  {i}. {f}")`,
+            'py-calc': `def calc(a,b):
+    return a+b, a-b, a*b, a/b if b else "÷0"
+x,y = 15,4
+print(f"🔢 {x} و {y}:")
+print(f"  + = {calc(x,y)[0]}\\n  - = {calc(x,y)[1]}\\n  × = {calc(x,y)[2]}\\n  ÷ = {calc(x,y)[3]}")`,
+            'py-fib': `def fib(n):
+    a,b = 0,1
+    for _ in range(n): yield a; a,b = b,a+b
+print("📐 فيبوناتشي (10):")
+print(list(fib(10)))`,
+            'py-oop': `class Pet:
+    def __init__(s,n,e): s.name,s.emoji = n,e
+    def speak(s): return f"{s.emoji} {s.name}!"
+for p in [Pet("بسبوسة","🐱"),Pet("ريكس","🐕")]: print(p.speak())`,
+            // HTML
+            'html-card': `<div style="font-family:system-ui;max-width:320px;margin:40px auto;background:#fff;padding:24px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.1);text-align:center">
+  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" style="width:70px;border-radius:50%">
+  <h2 style="margin:12px 0 4px">أحمد محمد</h2>
+  <p style="color:#666;margin:0 0 15px">مطور واجهات</p>
+  <div style="display:flex;gap:6px;justify-content:center">
+    <span style="background:#e0f2fe;color:#0369a1;padding:4px 10px;border-radius:20px;font-size:11px">HTML</span>
+    <span style="background:#fce7f3;color:#be185d;padding:4px 10px;border-radius:20px;font-size:11px">CSS</span>
+    <span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:20px;font-size:11px">JS</span>
+  </div>
+</div>`,
+            'html-buttons': `<div style="font-family:system-ui;padding:40px;text-align:center;background:#f8fafc;height:100vh">
+  <h2 style="color:#1e293b;margin-bottom:20px">🔘 أزرار</h2>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+    <button style="padding:10px 20px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer">أزرق</button>
+    <button style="padding:10px 20px;background:#ef4444;color:#fff;border:none;border-radius:8px;cursor:pointer">أحمر</button>
+    <button style="padding:10px 20px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer">أخضر</button>
+  </div>
+  <style>button:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}</style>
+</div>`,
+            'html-form': `<div style="font-family:system-ui;background:#f1f5f9;height:100vh;display:flex;justify-content:center;align-items:center">
+  <form style="background:#fff;padding:25px;border-radius:12px;width:300px;box-shadow:0 8px 20px rgba(0,0,0,0.08)" onsubmit="event.preventDefault();alert('✅ تم!')">
+    <h3 style="margin:0 0 15px;text-align:center">📝 دخول</h3>    <input type="email" placeholder="البريد" required style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #cbd5e1;border-radius:6px">
+    <input type="password" placeholder="كلمة المرور" required style="width:100%;padding:8px;margin-bottom:12px;border:1px solid #cbd5e1;border-radius:6px">
+    <button type="submit" style="width:100%;padding:8px;background:#0f172a;color:#fff;border:none;border-radius:6px;cursor:pointer">دخول</button>
+  </form>
+</div>`,
+            'html-game': `<div style="font-family:system-ui;text-align:center;padding:30px;background:#e0f2fe;height:100vh">
+  <h2>🎮 اضغط!</h2>
+  <p id="s" style="font-size:2.5rem;font-weight:bold;margin:15px 0">0</p>
+  <button onclick="s.textContent=+s.textContent+1" style="padding:12px 24px;font-size:1.1rem;background:#0284c7;color:#fff;border:none;border-radius:10px;cursor:pointer">+1</button>
+  <button onclick="s.textContent=0" style="padding:8px 16px;margin-top:10px;background:#64748b;color:#fff;border:none;border-radius:6px;cursor:pointer">تصفير</button>
+</div>`
+        };
+
+        function loadExample(key) {
+            if (key.startsWith('py-')) {
+                switchMode('python');
+                pyEditor.value = examples[key]; updateLineNumbers();
+            } else {
+                switchMode('html');
+                htmlEditor.value = examples[key]; updateHtmlLineNumbers(); updatePreview();
+            }
+            toggleExamples();
+        }
+
+        function toggleExamples() {
+            document.getElementById('examplesMenu').classList.toggle('show');
+        }
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.examples-dropdown')) document.getElementById('examplesMenu').classList.remove('show');
+        });
+
+        // === الخلفية المتحركة ===
+        function createBgAnimation() {
+            const container = document.getElementById('bgAnimation');
+            const symbols = ['🐍','print','def','class','<div>','</html>','{ }','[ ]','JS','CSS','#id','.class'];
+            for (let i = 0; i < 30; i++) {
+                const span = document.createElement('span');
+                span.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+                span.style.left = Math.random()*100+'%';
+                span.style.animationDuration = (Math.random()*15+10)+'s';
+                span.style.animationDelay = Math.random()*10+'s';
+                container.appendChild(span);
+            }
+        }
+    </script>
+</body>
+  </html>
